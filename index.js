@@ -1,9 +1,19 @@
-const { response } = require('express')
 const express = require('express')
-
+const morgan = require('morgan')
+const cors = require('cors')
 
 const app = express()
+
 app.use(express.json())
+app.use(cors())
+
+morgan.token('post', function (req, res) {
+    if(req.method === 'POST'){
+        return JSON.stringify(req.body)
+    }
+})
+
+app.use(morgan(':method :url :status :res[content-length] :response-time ms :post'))
 
 let persons = [
     {
@@ -39,6 +49,8 @@ const generateId = () => {
 
 app.post('/api/persons', (req, res) => {
     const body = req.body
+    
+
     if(!body.name){
         return res.status(400).json({
             error: 'name missing'
@@ -58,6 +70,9 @@ app.post('/api/persons', (req, res) => {
         number: body.number,
         id: generateId(),
     }
+
+    persons = persons.concat(person)
+    res.json(person)
 })
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -89,7 +104,7 @@ app.get('/info', (req, res) => {
     res.send(`<h3> Phonebook has info for ${count} people<h3> ${time}`)
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
